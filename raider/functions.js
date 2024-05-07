@@ -1,9 +1,6 @@
-
-
 function test() {
-  let testvar = setSortedNicks(getRolesFromComp(0,"Ranged"));
-  //console.log(testvar);
-  setOutput(testvar, "A1:A15");
+  let testvar = orderBy(getCooldown(0,'personal','dmgreduc','all'));
+  console.log(testvar);
 }
 
 function getDataBySpecID(specid, key) {
@@ -16,15 +13,25 @@ function getData(nick, key) {
     return data ? data[key] || getDataBySpecID(data.specid, key) : 'Unknown';
 }
 
-function getRolesFromComp(boss, role, ...roles) {
+function getClass(boss = 0, class_, ...classes_) {
+  return COMPS[boss].filter(nick => class_ === getData(nick, 'class') || classes_.includes(getData(nick, 'class')));   
+}
+
+function getSpec(boss = 0, spec, ...specs){ 
+  return COMPS[boss].filter(nick => spec === getData(nick, 'spec') || specs.includes(getData(nick, 'spec')));
+}
+
+function getRole(boss = 0, role, ...roles) {
     return COMPS[boss].filter(nick => role === getData(nick, 'role') || roles.includes(getData(nick, 'role')));
 }
 
-function getSpecsFromComp(boss, spec, ...specs) {
-    return COMPS[boss].filter(nick => spec === getData(nick, 'spec') || specs.includes(getData(nick, 'spec')));
+function getCooldown(boss = 0, type, subtype, ...subtypes) {
+  let cooldowns = [];
+  subtypes.length === 0 ? cooldowns = COOLDOWN[type][subtype] : cooldowns = COOLDOWN[type][subtype][subtypes];
+  return COMPS[boss].filter(nick => cooldowns.includes(getData(nick, 'specid')));
 }
 
-function setSortedNicks(comp, customOrder = ROLES) {
+function orderBy(comp, customOrder = ROLES) {
   const roleIndices = new Map();
   const dataMap = new Map();
 
@@ -63,7 +70,6 @@ function setOutput(comp, range, sheet = SHEET_TIER) {
   const srLength = sr.getValues().length;
 
   // Clear content and set values
-  
   const newArray = cLength >= srLength 
     ? comp.slice(0, srLength) 
     : comp.concat(Array(srLength - cLength).fill(['']));
@@ -71,3 +77,30 @@ function setOutput(comp, range, sheet = SHEET_TIER) {
   sr.clearContent();
   sr.setValues(newArray);
 }
+
+// Assignments
+/*
+    Roles -- Tanks > OS Tanks > Healers > OS Healers 
+    Boss Names Vertically
+    Boss Names Horizontally
+    Boss Names Shortened. Ignore symbols & spaces
+*/
+
+
+
+/*
+    Dark Intent
+    Generate top recipients list. Boomkins + Spriests > Others. Sort by average performance.
+    Assign best warlock to best recipient > 2nd best warlock to 2nd best recipient.
+    For guild sheet, check who is in each fight.
+*/
+
+// Global
+// getCooldown(boss = 0, type) --Type = Personal, Raid, or Target
+// getPurge(boss = 0, role, ...roles)
+// getKick(boss = 0, role, ...roles)
+
+// Magmaw
+// Hook -- Pick 3 melee. Sort by class -> name.
+
+//

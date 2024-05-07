@@ -44,3 +44,50 @@ const RANGE_COMP = SHEET_COMP.getRange(1, 1, SHEET_COMP.getLastRow(), SHEET_COMP
 
 const ROSTER = RANGE_ROSTER.map(([nick, char, specid, parse]) => ({ nick, char, specid, parse }));
 const COMPS = RANGE_COMP[0].map((_, colIndex) => RANGE_COMP.map(row => row[colIndex]));
+
+const COOLDOWN = {  
+    'personal': {
+        'dmgreduc': {
+            'all': [250, 251, 252, 102, 103, 104, 65, 66, 70, 258, 263, 71, 72, 73],
+            'magic': [250, 251, 252],
+            'physical': [250]
+        },
+        'health': [250, 104, 73],
+        'immunity': {
+            'all': [253, 254, 255],
+            'cc': [250, 251, 252],
+            'magic': [259, 260, 261],
+            'fear': [71, 72, 73],
+        }
+    },
+    'raid': {
+        'armor': [71, 72, 73],
+        'aura': [65],
+        'dmgreduc': [66, 256],
+        'heal': [102, 103, 104, 105, 256, 257, 258, 264],
+        'health': [71, 72, 73],
+        'immunity': {
+            'magic': [262, 263, 264],
+            'fear': [262, 263, 264],
+        },
+        'mana': [256, 257, 258, 264],
+        'move': [102, 103, 104, 105, 253, 254, 255],
+    },
+    'target': {
+        'brez': [250, 251, 252, 102, 103, 104, 105, 265, 266, 267],
+        'dmginc': [256],
+        'dmgreduc': [65, 66, 70, 256],
+        'haste': [265, 266, 267],
+        'heal': [65, 66, 70, 257],
+        'immunity': {
+            'fear': [256, 257, 258],
+            'move': [65, 66, 70],
+            'physical': [65, 66, 70],
+        },
+        'mana': [102, 103, 104, 105],
+        'move': [256, 257, 258],
+        'spellcrit': [62],
+        'threatinc': [253, 254, 255, 259, 260, 261],
+        'threatreduc': [65, 66, 70],
+    },
+}
