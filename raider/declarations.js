@@ -1,6 +1,6 @@
 const BOSSES = ['Magmaw','Omnotron Defense System','Chimaeron','Atramedes','Maloriak','Nefarian','Halfus Wyrmbreaker','Valiona and Theralion','Ascendant Council','Cho\'gall','Sinestra','Conclave of Wind','Al\'Akir'];
 const CLASSES = ['Death Knight', 'Druid', 'Hunter', 'Mage', 'Paladin', 'Priest', 'Rogue', 'Shaman', 'Warlock', 'Warrior'];
-const ROLES = ['Tank','Healer','Melee','Ranged'];
+const ROLES = ['Tank','OSTank','Healer','OSHealer','Melee','Ranged'];
 const SPECID = {
     250: { class: "Death Knight", spec: "Blood", role: "Tank" },
     251: { class: "Death Knight", spec: "Frost", role: "Melee" },
@@ -44,6 +44,8 @@ const RANGE_COMP = SHEET_COMP.getRange(1, 1, SHEET_COMP.getLastRow(), SHEET_COMP
 
 const ROSTER = RANGE_ROSTER.map(([nick, char, specid, parse]) => ({ nick, char, specid, parse }));
 const COMPS = RANGE_COMP[0].map((_, colIndex) => RANGE_COMP.map(row => row[colIndex]));
+const OSTANKS = SHEET.getSheetByName(SHEET_TIER).getRange('T5:T7').getValues().flat().filter(value => value !== '');
+const OSHEALERS = SHEET.getSheetByName(SHEET_TIER).getRange('T9:T13').getValues().flat().filter(value => value !== '');
 
 const ABILITY = {
     'dispel': {

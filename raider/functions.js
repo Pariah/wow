@@ -27,17 +27,21 @@ function getAbility(boss = 0, ability, ...abilities) {
   return COMPS[boss].filter(nick => abilityList.includes(getData(nick, 'specid')));
 }
 
-function orderBy(comp, ...options) {
+function orderBy(comp, offspec = false, numOSTanks = 0, numOSHealers = 0, ...options) {
+  let osTanksInComp = offspec ? comp.filter(player => OSTANKS.includes(player)).slice(0, numOSTanks) : [];
+  let osHealersInComp = offspec ? comp.filter(player => OSHEALERS.includes(player)).slice(0, numOSHealers) : [];
+  console.log(osTanksInComp, osHealersInComp)
   return comp.sort((a, b) => {
     for (let option of options) {
-      let aValue = getData(a, option);
-      let bValue = getData(b, option);
+      let [aValue, bValue] = [getData(a, option), getData(b, option)];
 
       if (option === 'parse') [aValue, bValue] = [bValue, aValue];
-
-      if (option === 'role') {
-        aValue = ROLES.indexOf(aValue);
-        bValue = ROLES.indexOf(bValue);
+      else if (option === 'role') {
+        if (osTanksInComp.includes(a)) aValue = 'OSTank';
+        if (osHealersInComp.includes(a)) aValue = 'OSHealer';
+        if (osTanksInComp.includes(b)) bValue = 'OSTank';
+        if (osHealersInComp.includes(b)) bValue = 'OSHealer';
+        [aValue, bValue] = [ROLES.indexOf(aValue), ROLES.indexOf(bValue)];
       }
 
       if (aValue !== bValue) return aValue < bValue ? -1 : 1;
@@ -63,6 +67,7 @@ function setOutput(comp, range, sheet = SHEET_TIER) {
   sr.clearContent();
   sr.setValues(newArray);
 }
+
 function getDarkIntent(boss = 0) {
   // Get all warlocks sorted by parse
   const warlocks = orderBy(getByType(boss, 'class', 'Warlock'), 'parse');
@@ -88,12 +93,17 @@ function getDarkIntent(boss = 0) {
 
   return assignments;
 }
+
+// Write a function that returns all boss names, shorten them by num, filter out symbols and spaces
+function getBossNames(num = 3) {
+  return BOSSNAMES.map(name => name.slice(0, num).replace(/[^a-zA-Z]/g, ''));
+}
+
 // Assignments
 /*
     Roles -- Tanks > OS Tanks > Healers > OS Healers 
     Boss Names Vertically
     Boss Names Horizontally
-    Boss Names Shortened. Ignore symbols & spaces
 */
 
 /*
@@ -104,3 +114,29 @@ function getDarkIntent(boss = 0) {
 
   return newArray;
 */
+
+// function orderBy(comp, offspec = false, numOSTanks = 0, numOSHealers = 0, ...options) {
+//   let osTankCount = 0, osHealerCount = 0;
+
+//   return comp.sort((a, b) => {
+//     for (let option of options) {
+//       let [aValue, bValue] = [getData(a, option), getData(b, option)];
+
+//       if (option === 'parse') [aValue, bValue] = [bValue, aValue];
+//       else if (option === 'role') {
+//         if (offspec && OSTANKS.includes(a) && osTankCount < numOSTanks) {
+//           aValue = 'OSTank';
+//           osTankCount++;
+//         }
+//         if (offspec && OSHEALERS.includes(b) && osHealerCount < numOSHealers) {
+//           bValue = 'OSHealer';
+//           osHealerCount++;
+//         }
+//         [aValue, bValue] = [ROLES.indexOf(aValue), ROLES.indexOf(bValue)];
+//       }
+
+//       if (aValue !== bValue) return aValue < bValue ? -1 : 1;
+//     }
+//     return 0;
+//   });
+// }
