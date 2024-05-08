@@ -45,6 +45,20 @@ const RANGE_COMP = SHEET_COMP.getRange(1, 1, SHEET_COMP.getLastRow(), SHEET_COMP
 const ROSTER = RANGE_ROSTER.map(([nick, char, specid, parse]) => ({ nick, char, specid, parse }));
 const COMPS = RANGE_COMP[0].map((_, colIndex) => RANGE_COMP.map(row => row[colIndex]));
 
+const ABILITY = {
+    'dispel': {
+        'curse': [102, 103, 104, 105, 62, 63, 64, 262, 263, 264],
+        'disease': [65, 66, 70, 256, 257, 258],
+        'magic': [105, 65, 256, 257, 258, 264],
+        'poison': [102, 103, 104, 105, 65, 66, 67],
+    },
+    'interrupt': [250, 251, 252, 103, 104, 62, 63, 64, 65, 66, 70, 259, 260, 261, 262, 263, 264, 71, 72, 73],
+    'purge': {
+        'enrage': [102, 103, 104, 105, 253, 254, 255, 259, 260, 261],
+        'magic': [62, 63, 64, 256, 257, 258, 262, 263, 264, 73]
+    }
+}
+
 const COOLDOWN = {  
     'personal': {
         'dmgreduc': {

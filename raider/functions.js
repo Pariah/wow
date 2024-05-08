@@ -13,55 +13,41 @@ function getData(nick, key) {
     return data ? data[key] || getDataBySpecID(data.specid, key) : 'Unknown';
 }
 
-function getClass(boss = 0, class_, ...classes_) {
-  return COMPS[boss].filter(nick => class_ === getData(nick, 'class') || classes_.includes(getData(nick, 'class')));   
-}
-
-function getSpec(boss = 0, spec, ...specs){ 
-  return COMPS[boss].filter(nick => spec === getData(nick, 'spec') || specs.includes(getData(nick, 'spec')));
-}
-
-function getRole(boss = 0, role, ...roles) {
-    return COMPS[boss].filter(nick => role === getData(nick, 'role') || roles.includes(getData(nick, 'role')));
+function getByType(boss = 0, type, value, ...values) {
+  return COMPS[boss].filter(nick => value === getData(nick, type) || values.includes(getData(nick, type)));
 }
 
 function getCooldown(boss = 0, type, subtype, ...subtypes) {
-  let cooldowns = [];
-  subtypes.length === 0 ? cooldowns = COOLDOWN[type][subtype] : cooldowns = COOLDOWN[type][subtype][subtypes];
+  const cooldowns = subtypes.length === 0 ? COOLDOWN[type][subtype] : COOLDOWN[type][subtype][subtypes];
   return COMPS[boss].filter(nick => cooldowns.includes(getData(nick, 'specid')));
 }
 
-function orderBy(comp, customOrder = ROLES) {
-  const roleIndices = new Map();
-  const dataMap = new Map();
+function getAbility(boss = 0, ability, ...abilities) {
+  const abilityList = abilities.length === 0 ? ABILITY[ability] : ABILITY[ability][abilities];
+  return COMPS[boss].filter(nick => abilityList.includes(getData(nick, 'specid')));
+}
 
-  // Pre-compute role indices and dataMap for faster sorting
-  for (const nick of comp) {
-    const role = getData(nick, 'role');
-    const roleIndex = customOrder.indexOf(role);
-    const class_ = getData(nick, 'class');
-    dataMap.set(nick, { roleIndex, class_ });
-    roleIndices.set(nick, roleIndex);
-  }
+function orderBy(comp, ...options) {
+  return comp.sort((a, b) => {
+    for (let option of options) {
+      let aValue = getData(a, option);
+      let bValue = getData(b, option);
 
-  comp.sort((a, b) => {
-    const aData = dataMap.get(a);
-    const bData = dataMap.get(b);
+      if (option === 'parse') [aValue, bValue] = [bValue, aValue];
 
-    // Sort by role indices
-    const roleDiff = aData.roleIndex - bData.roleIndex;
-    if (roleDiff !== 0) return roleDiff;
+      if (option === 'role') {
+        aValue = ROLES.indexOf(aValue);
+        bValue = ROLES.indexOf(bValue);
+      }
 
-    // If roles are the same, sort by class
-    return aData.class_.localeCompare(bData.class_);
+      if (aValue !== bValue) return aValue < bValue ? -1 : 1;
+    }
+    return 0;
   });
+}
 
-  let newArray = [];
-  for (nick in comp) {
-    newArray.push([comp[nick]])
-  }
-
-  return newArray;
+function filterBy(comp, toggle = true ,type, value, ...values) {
+  return comp.filter(nick => toggle ? value === getData(nick, type) || values.includes(getData(nick, type)) : value !== getData(nick, type) && !values.includes(getData(nick, type)));
 }
 
 function setOutput(comp, range, sheet = SHEET_TIER) {
@@ -77,7 +63,31 @@ function setOutput(comp, range, sheet = SHEET_TIER) {
   sr.clearContent();
   sr.setValues(newArray);
 }
+function getDarkIntent(boss = 0) {
+  // Get all warlocks sorted by parse
+  const warlocks = orderBy(getByType(boss, 'class', 'Warlock'), 'parse');
 
+  // Get all Shadow and Balance characters sorted by parse
+  const shadowBalanceDPS = orderBy(getByType(boss, 'spec', 'Shadow', 'Balance'), 'parse')
+    .filter(dps => !warlocks.includes(dps));
+
+  // Get all ranged DPS sorted by parse, excluding warlocks and Shadow/Balance characters
+  const otherRangedDPS = orderBy(getByType(boss, 'role', 'Ranged'), 'parse')
+    .filter(dps => !warlocks.includes(dps) && !shadowBalanceDPS.includes(dps));
+
+  // Combine Shadow/Balance characters and other ranged DPS into one array
+  const rangedDPS = [...shadowBalanceDPS, ...otherRangedDPS];
+
+  // Assign the highest parse warlock to the highest parse ranged DPS
+  const assignments = [];
+  while (warlocks.length && rangedDPS.length) {
+    const warlock = warlocks.shift();
+    const dps = rangedDPS.shift();
+    assignments.push({ warlock, dps });
+  }
+
+  return assignments;
+}
 // Assignments
 /*
     Roles -- Tanks > OS Tanks > Healers > OS Healers 
@@ -86,21 +96,11 @@ function setOutput(comp, range, sheet = SHEET_TIER) {
     Boss Names Shortened. Ignore symbols & spaces
 */
 
-
-
 /*
-    Dark Intent
-    Generate top recipients list. Boomkins + Spriests > Others. Sort by average performance.
-    Assign best warlock to best recipient > 2nd best warlock to 2nd best recipient.
-    For guild sheet, check who is in each fight.
+  let newArray = [];
+  for (nick in comp) {
+    newArray.push([comp[nick]])
+  }
+
+  return newArray;
 */
-
-// Global
-// getCooldown(boss = 0, type) --Type = Personal, Raid, or Target
-// getPurge(boss = 0, role, ...roles)
-// getKick(boss = 0, role, ...roles)
-
-// Magmaw
-// Hook -- Pick 3 melee. Sort by class -> name.
-
-//
