@@ -28,9 +28,9 @@ function getAbility(boss = 0, ability, ...abilities) {
 }
 
 function orderBy(comp, offspec = false, numOSTanks = 0, numOSHealers = 0, ...options) {
-  let osTanksInComp = offspec ? comp.filter(player => OSTANKS.includes(player)).slice(0, numOSTanks) : [];
-  let osHealersInComp = offspec ? comp.filter(player => OSHEALERS.includes(player)).slice(0, numOSHealers) : [];
-  console.log(osTanksInComp, osHealersInComp)
+  const osTanksInComp = offspec ? comp.filter(player => OSTANKS.includes(player)).slice(0, numOSTanks) : [];
+  const osHealersInComp = offspec ? comp.filter(player => OSHEALERS.includes(player)).slice(0, numOSHealers) : [];
+  
   return comp.sort((a, b) => {
     for (let option of options) {
       let [aValue, bValue] = [getData(a, option), getData(b, option)];
@@ -70,14 +70,14 @@ function setOutput(comp, range, sheet = SHEET_TIER) {
 
 function getDarkIntent(boss = 0) {
   // Get all warlocks sorted by parse
-  const warlocks = orderBy(getByType(boss, 'class', 'Warlock'), 'parse');
+  const warlocks = orderBy(getByType(boss, 'class', 'Warlock'), false, 0, 0, 'parse');
 
   // Get all Shadow and Balance characters sorted by parse
-  const shadowBalanceDPS = orderBy(getByType(boss, 'spec', 'Shadow', 'Balance'), 'parse')
+  const shadowBalanceDPS = orderBy(getByType(boss, 'spec', 'Shadow', 'Balance'), false, 0, 0, 'parse')
     .filter(dps => !warlocks.includes(dps));
 
   // Get all ranged DPS sorted by parse, excluding warlocks and Shadow/Balance characters
-  const otherRangedDPS = orderBy(getByType(boss, 'role', 'Ranged'), 'parse')
+  const otherRangedDPS = orderBy(getByType(boss, 'role', 'Ranged'), false, 0, 0, 'parse')
     .filter(dps => !warlocks.includes(dps) && !shadowBalanceDPS.includes(dps));
 
   // Combine Shadow/Balance characters and other ranged DPS into one array
@@ -94,7 +94,6 @@ function getDarkIntent(boss = 0) {
   return assignments;
 }
 
-// Write a function that returns all boss names, shorten them by num, filter out symbols and spaces
 function getBossNames(num = 3) {
   return BOSSNAMES.map(name => name.slice(0, num).replace(/[^a-zA-Z]/g, ''));
 }
@@ -105,6 +104,8 @@ function getBossNames(num = 3) {
     Boss Names Vertically
     Boss Names Horizontally
 */
+// Check sortBy, maybe put offspec, numOStanks and numOshealers in {} in the function call
+
 
 /*
   let newArray = [];
@@ -114,29 +115,3 @@ function getBossNames(num = 3) {
 
   return newArray;
 */
-
-// function orderBy(comp, offspec = false, numOSTanks = 0, numOSHealers = 0, ...options) {
-//   let osTankCount = 0, osHealerCount = 0;
-
-//   return comp.sort((a, b) => {
-//     for (let option of options) {
-//       let [aValue, bValue] = [getData(a, option), getData(b, option)];
-
-//       if (option === 'parse') [aValue, bValue] = [bValue, aValue];
-//       else if (option === 'role') {
-//         if (offspec && OSTANKS.includes(a) && osTankCount < numOSTanks) {
-//           aValue = 'OSTank';
-//           osTankCount++;
-//         }
-//         if (offspec && OSHEALERS.includes(b) && osHealerCount < numOSHealers) {
-//           bValue = 'OSHealer';
-//           osHealerCount++;
-//         }
-//         [aValue, bValue] = [ROLES.indexOf(aValue), ROLES.indexOf(bValue)];
-//       }
-
-//       if (aValue !== bValue) return aValue < bValue ? -1 : 1;
-//     }
-//     return 0;
-//   });
-// }
