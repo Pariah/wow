@@ -13,6 +13,11 @@ function getData(nick, key) {
     return data ? data[key] || getDataBySpecID(data.specid, key) : 'Unknown';
 }
 
+function getRole(nick) {
+  const role = getData(nick, 'role');
+  return (role === 'Melee' || role === 'Ranged') ? 'DPS' : role;
+}
+
 function getByType(boss = 0, type, value, ...values) {
   return COMPS[boss].filter(nick => value === getData(nick, type) || values.includes(getData(nick, type)));
 }
