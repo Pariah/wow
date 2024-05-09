@@ -85,8 +85,8 @@ function getCharacterData(characterName, role, zoneID, serverName = 'Faerlina', 
   }
 
 function getAccessToken() {
-    const clientId = '9bffb6d2-d735-48be-95c8-aa66f0808f73';
-    const clientSecret = 'zdY4U45WIa3PJF9tDBqVQxCjZ1AonXMgTbX95bWd';
+    const clientId = '';
+    const clientSecret = '';
     const url = 'https://www.warcraftlogs.com/oauth/token';
     const options = {
         method: 'post',
