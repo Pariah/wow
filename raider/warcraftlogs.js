@@ -94,12 +94,7 @@ function getKeys() {
 
 
 function getAccessToken() {
-<<<<<<< HEAD
     const [clientId, clientSecret] = getKeys();
-=======
-    const clientId = '';
-    const clientSecret = '';
->>>>>>> 8dddaae651ea09117efc868deecf28314d5086bd
     const url = 'https://www.warcraftlogs.com/oauth/token';
     const options = {
         method: 'post',
