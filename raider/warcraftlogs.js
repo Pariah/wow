@@ -11,7 +11,7 @@
  */
 
 function test() {
-    const data = getCharacterData('Chasedp', 'Healer', 1002);
+    const data = getCharacterData('Chasedp', 'Healer', 1020);
     Logger.log(data);
 }
 
@@ -65,7 +65,6 @@ function getCharacterData(characterName, role, zoneID, serverName = 'Faerlina', 
    */
   function parseProperty(wclData, property) {
     const jsonObject = JSON.parse(wclData);
-    //Logger.log(jsonObject.data.characterData.character.zoneRankings[property]);
     return jsonObject.data.characterData.character.zoneRankings[property];
   }
   
@@ -84,9 +83,18 @@ function getCharacterData(characterName, role, zoneID, serverName = 'Faerlina', 
     return encounterTotalKills;
   }
 
+// Retrieve API keys
+function getKeys() {
+  const documentProperties = PropertiesService.getDocumentProperties();
+  const clientId = documentProperties.getProperty('CLIENT_ID');
+  const clientSecret = documentProperties.getProperty('CLIENT_SECRET');
+  
+  return [clientId, clientSecret];
+}
+
+
 function getAccessToken() {
-    const clientId = '9bffb6d2-d735-48be-95c8-aa66f0808f73';
-    const clientSecret = 'zdY4U45WIa3PJF9tDBqVQxCjZ1AonXMgTbX95bWd';
+    const [clientId, clientSecret] = getKeys();
     const url = 'https://www.warcraftlogs.com/oauth/token';
     const options = {
         method: 'post',
