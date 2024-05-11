@@ -1,3 +1,4 @@
+const TIER = 'T11';
 const BOSSES = ['Magmaw','Omnotron Defense System','Chimaeron','Atramedes','Maloriak','Nefarian','Halfus Wyrmbreaker','Valiona and Theralion','Ascendant Council','Cho\'gall','Sinestra','Conclave of Wind','Al\'Akir'];
 const CLASSES = ['Death Knight', 'Druid', 'Hunter', 'Mage', 'Paladin', 'Priest', 'Rogue', 'Shaman', 'Warlock', 'Warrior'];
 const ROLES = ['Tank','OSTank','Healer','OSHealer','Melee','Ranged'];
@@ -38,14 +39,15 @@ const SPECID = {
 const SHEET = SpreadsheetApp.getActiveSpreadsheet();
 const SHEET_ROSTER = SHEET.getSheetByName('ROSTER');
 const SHEET_COMP = SHEET.getSheetByName('COMP');
-const SHEET_TIER = 'T11';
-const RANGE_ROSTER = SHEET_ROSTER.getRange(2, 1, SHEET_ROSTER.getLastRow() - 1, SHEET_ROSTER.getLastColumn()).getValues();
+const SHEET_TIER = SHEET.getSheetByName(TIER);
+const RANGE_ROSTER = SHEET_ROSTER.getRange(2, 1, SHEET_ROSTER.getLastRow() - 1, 4).getValues();
 const RANGE_COMP = SHEET_COMP.getRange(1, 1, SHEET_COMP.getLastRow(), SHEET_COMP.getLastColumn()).getValues();
 
 const ROSTER = RANGE_ROSTER.map(([nick, char, specid, parse]) => ({ nick, char, specid, parse }));
 const COMPS = RANGE_COMP[0].map((_, colIndex) => RANGE_COMP.map(row => row[colIndex]));
-const OSTANKS = SHEET.getSheetByName(SHEET_TIER).getRange('T5:T7').getValues().flat().filter(value => value !== '');
-const OSHEALERS = SHEET.getSheetByName(SHEET_TIER).getRange('T9:T13').getValues().flat().filter(value => value !== '');
+const ROSTER_FULL = ROSTER.map(row => row.nick);
+const OSTANKS = SHEET_TIER.getRange('T5:T6').getValues().flat().filter(value => value !== '');
+const OSHEALERS = SHEET_TIER.getRange('T9:T11').getValues().flat().filter(value => value !== '');
 
 const ABILITY = {
     'dispel': {

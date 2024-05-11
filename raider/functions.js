@@ -1,5 +1,5 @@
 function test() {
-  let testvar = orderBy(getCooldown(0,'personal','dmgreduc','all'));
+  let testvar = getWarlockAssignments();
   console.log(testvar);
 }
 
@@ -22,8 +22,18 @@ function getByType(boss = 0, type, value, ...values) {
   return COMPS[boss].filter(nick => value === getData(nick, type) || values.includes(getData(nick, type)));
 }
 
-function getCooldown(boss = 0, type, subtype, ...subtypes) {
-  const cooldowns = subtypes.length === 0 ? COOLDOWN[type][subtype] : COOLDOWN[type][subtype][subtypes];
+function getAllByType(type, value, ...values) {
+  const allNicks = ROSTER.map(row => row.nick);
+  return allNicks.filter(nick => value === getData(nick, type) || values.includes(getData(nick, type)));
+}
+
+function getCooldown(boss = 0, type, subtype = [], ...subtypes) {
+  let cooldowns;
+  if (subtype.length === 1) {
+    cooldowns = subtypes.length === 0 ? COOLDOWN[type][subtype[0]] : subtypes.reduce((acc, curr) => [...acc, ...COOLDOWN[type][subtype[0]][curr]], []);
+  } else {
+    cooldowns = subtype.reduce((acc, curr) => [...acc, ...COOLDOWN[type][curr]], []);
+  }
   return COMPS[boss].filter(nick => cooldowns.includes(getData(nick, 'specid')));
 }
 
@@ -55,11 +65,11 @@ function orderBy(comp, offspec = false, numOSTanks = 0, numOSHealers = 0, ...opt
   });
 }
 
-function filterBy(comp, toggle = true ,type, value, ...values) {
+function filterBy(comp, toggle = true, type, value, ...values) {
   return comp.filter(nick => toggle ? value === getData(nick, type) || values.includes(getData(nick, type)) : value !== getData(nick, type) && !values.includes(getData(nick, type)));
 }
 
-function setOutput(comp, range, sheet = SHEET_TIER) {
+function setOutput(comp, range, sheet = TIER) {
   const sr = SHEET.getSheetByName(sheet).getRange(range);
   const cLength = comp.length;
   const srLength = sr.getValues().length;
@@ -70,7 +80,7 @@ function setOutput(comp, range, sheet = SHEET_TIER) {
     : comp.concat(Array(srLength - cLength).fill(['']));
   
   sr.clearContent();
-  sr.setValues(newArray);
+  sr.setValues(createArray(newArray));
 }
 
 function getDarkIntent(boss = 0) {
@@ -99,8 +109,36 @@ function getDarkIntent(boss = 0) {
   return assignments;
 }
 
+function getWarlockAssignments() {
+  const warlocks = getAllByType('class','Warlock');
+  const assignments = warlocks.map(warlock => [warlock, '', '']);
+
+  for (let i = 0; i < BOSSES.length; i++) {
+    const bossAssignments = getDarkIntent(i);
+    for (let j = 0; j < warlocks.length; j++) {
+      const assignment = bossAssignments.find(assignment => assignment.warlock === warlocks[j]);
+      assignments[j].push(assignment ? assignment.dps : null);
+      if (i < BOSSES.length - 1) {
+        assignments[j].push('');
+      }
+    }
+  }
+
+  return assignments;
+}
+
+function getBloodlustAssignments(boss = 0) {
+  const casters = getByType(boss, 'class', 'Shaman', 'Mage');
+  const result = orderBy(casters, false, 0, 0, 'parse').reverse();
+  return result[0];
+}
+
 function getBossNames(num = 3) {
-  return BOSSNAMES.map(name => name.slice(0, num).replace(/[^a-zA-Z]/g, ''));
+  return BOSSES.map(name => name.slice(0, num).replace(/[^a-zA-Z]/g, ''));
+}
+
+function createArray(comp) {
+  return comp.map(nick => [nick]);
 }
 
 // Assignments
