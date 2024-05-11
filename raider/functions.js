@@ -18,8 +18,8 @@ function getRole(nick) {
   return (role === 'Melee' || role === 'Ranged') ? 'DPS' : role;
 }
 
-function getByType(boss = 0, type, value, ...values) {
-  return COMPS[boss].filter(nick => value === getData(nick, type) || values.includes(getData(nick, type)));
+function getByType(comp, type, value, ...values) {
+  return comp.filter(nick => value === getData(nick, type) || values.includes(getData(nick, type)));
 }
 
 function getAllByType(type, value, ...values) {
@@ -27,36 +27,37 @@ function getAllByType(type, value, ...values) {
   return allNicks.filter(nick => value === getData(nick, type) || values.includes(getData(nick, type)));
 }
 
-function getCooldown(boss = 0, type, subtype = [], ...subtypes) {
+function getCooldown(comp, type, subtype = [], ...subtypes) {
   let cooldowns;
   if (subtype.length === 1) {
     cooldowns = subtypes.length === 0 ? COOLDOWN[type][subtype[0]] : subtypes.reduce((acc, curr) => [...acc, ...COOLDOWN[type][subtype[0]][curr]], []);
   } else {
     cooldowns = subtype.reduce((acc, curr) => [...acc, ...COOLDOWN[type][curr]], []);
   }
-  return COMPS[boss].filter(nick => cooldowns.includes(getData(nick, 'specid')));
+  return comp.filter(nick => cooldowns.includes(getData(nick, 'specid')));
 }
 
-function getAbility(boss = 0, ability, ...abilities) {
+function getAbility(comp, ability, ...abilities) {
   const abilityList = abilities.length === 0 ? ABILITY[ability] : ABILITY[ability][abilities];
-  return COMPS[boss].filter(nick => abilityList.includes(getData(nick, 'specid')));
+  return comp.filter(nick => abilityList.includes(getData(nick, 'specid')));
 }
 
-function orderBy(comp, offspec = false, numOSTanks = 0, numOSHealers = 0, ...options) {
-  const osTanksInComp = offspec ? comp.filter(player => OSTANKS.includes(player)).slice(0, numOSTanks) : [];
-  const osHealersInComp = offspec ? comp.filter(player => OSHEALERS.includes(player)).slice(0, numOSHealers) : [];
-  
+// TODO: Add support to options that have multiple values; i.e. 'parse','specid','63','64', etc.
+function orderBy(comp, ...options) {
   return comp.sort((a, b) => {
     for (let option of options) {
-      let [aValue, bValue] = [getData(a, option), getData(b, option)];
+      let aValue, bValue;
 
-      if (option === 'parse') [aValue, bValue] = [bValue, aValue];
-      else if (option === 'role') {
-        if (osTanksInComp.includes(a)) aValue = 'OSTank';
-        if (osHealersInComp.includes(a)) aValue = 'OSHealer';
-        if (osTanksInComp.includes(b)) bValue = 'OSTank';
-        if (osHealersInComp.includes(b)) bValue = 'OSHealer';
-        [aValue, bValue] = [ROLES.indexOf(aValue), ROLES.indexOf(bValue)];
+      if (Array.isArray(option)) {
+        const [field, ...order] = option;
+        aValue = order.indexOf(getData(a, field));
+        bValue = order.indexOf(getData(b, field));
+        if (aValue === -1) aValue = Infinity; // put items not in the order list at the end
+        if (bValue === -1) bValue = Infinity;
+      } else {
+        [aValue, bValue] = [getData(a, option), getData(b, option)];
+        if (option === 'parse') [aValue, bValue] = [bValue, aValue];
+        else if (option === 'role') [aValue, bValue] = [ROLES.indexOf(aValue), ROLES.indexOf(bValue)];
       }
 
       if (aValue !== bValue) return aValue < bValue ? -1 : 1;
@@ -84,15 +85,16 @@ function setOutput(comp, range, sheet = TIER) {
 }
 
 function getDarkIntent(boss = 0) {
+  const COMP = COMPS[boss];
   // Get all warlocks sorted by parse
-  const warlocks = orderBy(getByType(boss, 'class', 'Warlock'), false, 0, 0, 'parse');
+  const warlocks = orderBy(getByType(COMP, 'class', 'Warlock'), 'parse');
 
   // Get all Shadow and Balance characters sorted by parse
-  const shadowBalanceDPS = orderBy(getByType(boss, 'spec', 'Shadow', 'Balance'), false, 0, 0, 'parse')
+  const shadowBalanceDPS = orderBy(getByType(COMP, 'spec', 'Shadow', 'Balance'), 'parse')
     .filter(dps => !warlocks.includes(dps));
 
   // Get all ranged DPS sorted by parse, excluding warlocks and Shadow/Balance characters
-  const otherRangedDPS = orderBy(getByType(boss, 'role', 'Ranged'), false, 0, 0, 'parse')
+  const otherRangedDPS = orderBy(getByType(COMP, 'role', 'Ranged'), 'parse')
     .filter(dps => !warlocks.includes(dps) && !shadowBalanceDPS.includes(dps));
 
   // Combine Shadow/Balance characters and other ranged DPS into one array
@@ -128,15 +130,15 @@ function getWarlockAssignments() {
 }
 
 function getBloodlustAssignments(boss = 0) {
-  const casters = getByType(boss, 'class', 'Shaman', 'Mage');
-  const result = orderBy(casters, false, 0, 0, 'parse').reverse();
+  const casters = getByType(COMPS[boss], 'class', 'Shaman', 'Mage');
+  const result = orderBy(casters, 'parse').reverse();
   return result[0];
 }
 
-function getTankCDs(boss = 0, nick, excludeOtherTank = false, excludeList = []) {
-  const tanks = getByType(boss, 'role', 'Tank');
+function getTankCDs(comp, nick, excludeOtherTank = false, excludeList = []) {
+  const tanks = getByType(comp, 'role', 'Tank');
   const otherTank = tanks.find(tank => tank !== nick);
-  const targetCD = getCooldown(boss, 'target', ['dmgreduc'])
+  const targetCD = getCooldown(comp, 'target', ['dmgreduc'])
     .filter(cd => !excludeList.includes(cd))
     .filter(cd => !excludeOtherTank || cd !== otherTank)
     .filter(cd => cd !== nick);
@@ -146,8 +148,8 @@ function getTankCDs(boss = 0, nick, excludeOtherTank = false, excludeList = []) 
   return tankCDList;
 }
 
-function getRaidCDs(boss = 0, type = ['aura', 'dmgreduc', 'heal'], excludeList = []) {
-  const raidCD = getCooldown(boss, 'raid', type)
+function getRaidCDs(comp, type = ['aura', 'dmgreduc', 'heal'], excludeList = []) {
+  const raidCD = getCooldown(comp, 'raid', type)
     .filter(cd => !excludeList.includes(cd))
     .filter(cd => cd !== null && cd !== undefined);
 
@@ -158,22 +160,13 @@ function createArray(comp) {
   return comp.map(nick => [nick]);
 }
 
-function getTanks(boss = 0) {
-  const primaryTanks = getByType(boss, 'role', 'Tank');
-  const extraTank = OSTANKS.find(tank => COMPS[boss].includes(tank));
+function getTanks(comp) {
+  const primaryTanks = getByType(comp, 'role', 'Tank');
+  const extraTank = OSTANKS.find(tank => comp.includes(tank));
   const tanks = [...primaryTanks, extraTank];
 
   return tanks;
 }
-
-// Assignments
-/*
-    Roles -- Tanks > OS Tanks > Healers > OS Healers 
-    Boss Names Vertically
-    Boss Names Horizontally
-*/
-// Check sortBy, maybe put offspec, numOStanks and numOshealers in {} in the function call
-
 
 /*
   let newArray = [];
