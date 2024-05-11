@@ -133,12 +133,37 @@ function getBloodlustAssignments(boss = 0) {
   return result[0];
 }
 
-function getBossNames(num = 3) {
-  return BOSSES.map(name => name.slice(0, num).replace(/[^a-zA-Z]/g, ''));
+function getTankCDs(boss = 0, nick, excludeOtherTank = false, excludeList = []) {
+  const tanks = getByType(boss, 'role', 'Tank');
+  const otherTank = tanks.find(tank => tank !== nick);
+  const targetCD = getCooldown(boss, 'target', ['dmgreduc'])
+    .filter(cd => !excludeList.includes(cd))
+    .filter(cd => !excludeOtherTank || cd !== otherTank)
+    .filter(cd => cd !== nick);
+  const tankCDList = [nick, nick, ...targetCD]
+    .filter(cd => cd !== null && cd !== undefined);
+
+  return tankCDList;
+}
+
+function getRaidCDs(boss = 0, type = ['aura', 'dmgreduc', 'heal'], excludeList = []) {
+  const raidCD = getCooldown(boss, 'raid', type)
+    .filter(cd => !excludeList.includes(cd))
+    .filter(cd => cd !== null && cd !== undefined);
+
+  return raidCD;
 }
 
 function createArray(comp) {
   return comp.map(nick => [nick]);
+}
+
+function getTanks(boss = 0) {
+  const primaryTanks = getByType(boss, 'role', 'Tank');
+  const extraTank = OSTANKS.find(tank => COMPS[boss].includes(tank));
+  const tanks = [...primaryTanks, extraTank];
+
+  return tanks;
 }
 
 // Assignments

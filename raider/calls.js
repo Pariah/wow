@@ -5,6 +5,8 @@ function forEachRaid() {
     assignmentsBloodlust();
     // Bosses
     bossMagmaw();
+    bossOmnotron();
+    bossChimaeron();
 }
 
 function forEachTier() {
@@ -55,17 +57,17 @@ function bossMagmaw() {
     const lavaParasitesNicks = getByType(BOSS, 'specid', 251, 252);
     setOutput(lavaParasitesNicks, RANGE_LAVAPARASITES);
 
-    let hookNicks = getByType(BOSS, 'role', 'Melee');
-    hookNicks = orderBy(hookNicks, false, 0, 0, 'parse').reverse();
+    const hookNicks = orderBy(getByType(BOSS, 'role', 'Melee'), false, 0, 0, 'parse').reverse();
     setOutput(hookNicks, RANGE_HOOK);
 
-    let lavaSpewNicks = getCooldown(BOSS, 'raid', ['aura', 'dmgreduc', 'heal']);
-    lavaSpewNicks = orderBy(lavaSpewNicks, false, 0, 0, 'role', 'class');
+    const lavaSpewNicks = orderBy(getRaidCDs(BOSS), false, 0, 0, 'role', 'class');
     setOutput(lavaSpewNicks, RANGE_LAVASPEW);
 
-    // Fix so that the second tank's personal cooldown is not included in the first 3 rows
-    // Only show personals of the tank1 in first 3, tank2 is second 3
-    let mangleNicks = [...getCooldown(BOSS, 'personal', ['dmgreduc'], 'all'), ...getCooldown(BOSS, 'target', ['dmgreduc'])];
+    const firstTankCDs = getTankCDs(BOSS, getTanks(BOSS)[0], true).slice(0, 3);
+    const mangleNicks = [
+        ...firstTankCDs,
+        ...getTankCDs(BOSS, getTanks(BOSS)[1], true, firstTankCDs).slice(0, 3)
+    ];
     setOutput(mangleNicks, RANGE_MANGLE);
 }
 
@@ -79,7 +81,7 @@ function bossOmnotron() {
     const RANGE_COOLDOWNS = 'BH27:BH32';
 
     let arcaneAnnihilatorPurgeNicks = getAbility(BOSS, 'purge', 'magic');
-    arcaneAnnihilatoPurgeNicks = orderBy(arcaneAnnihilatorPurgeNicks, false, 0, 0, 'class', 'parse');
+    arcaneAnnihilatorPurgeNicks = orderBy(arcaneAnnihilatorPurgeNicks, false, 0, 0, 'class', 'parse');
     setOutput(arcaneAnnihilatorPurgeNicks, RANGE_ARCANEANNIHILATORPURGE);
 
     let arcaneAnnihilatorNicks = getAbility(BOSS, 'interrupt');
@@ -116,25 +118,71 @@ function bossChimaeron() {
     tanks = orderBy(tanks, false, 0, 0, 'spec', 'Blood', 'Protection','Guardian','Retribution');
     setOutput(tanks, RANGE_TANKS);
 
-    function getTankCDS(tankIndex, excludeTanks) {
-        return [
-            ...getCooldown(BOSS, 'personal', ['dmgreduc'], 'all').filter(nick => nick === tanks[tankIndex]),
-            ...getCooldown(BOSS, 'personal', ['health']).filter(nick => nick === tanks[tankIndex]),
-            ...getCooldown(BOSS, 'target', ['dmgreduc']).filter(nick => !excludeTanks.includes(nick))
-        ].filter(entry => entry !== null && entry !== undefined);
-    }
-    
     // DOUBLE ATTACK = tanks[0]
-    const doubleAttackTankCDS = getTankCDS(0, [tanks[1], tanks[2]]);
-    setOutput(doubleAttackTankCDS, RANGE_DOUBLEATTACKTANKCDS);
+    const doubleAttackTankCDs = getTankCDs(BOSS, tanks[0], true, [tanks[1], tanks[2]]);
+    setOutput(doubleAttackTankCDs, RANGE_DOUBLEATTACKTANKCDS);
     
     // STACK TANK = tanks[1]
-    let stackTankCDS = getTankCDS(1, [tanks[0], tanks[2]]);
-    stackTankCDS = stackTankCDS.filter(entry => !doubleAttackTankCDS.slice(0, 3).includes(entry));
-    setOutput(stackTankCDS, RANGE_STACKTANKCDS);
+    const excludeList = doubleAttackTankCDs.slice(0, 3);
+    const stackTankCDs = getTankCDs(BOSS, tanks[1], true, [tanks[0], tanks[2], ...excludeList]);
+    setOutput(stackTankCDs, RANGE_STACKTANKCDS);
 
-    let stackTank
+    const stackRaidCDs = getRaidCDs(BOSS, ['aura', 'dmgreduc', 'heal']);
+    setOutput(stackRaidCDs, RANGE_STACKRAIDCDS);
+
+    const tanksMeleeSorted = orderBy(getByType(BOSS, 'role', 'Tank', 'Melee'), false, 0, 0, 'role', 'class');
+    setOutput(tanksMeleeSorted, RANGE_TANKSMELEE);
+
+    const healersRanged = orderBy(getByType(BOSS, 'role', 'Healer', 'Ranged'), false, 0, 0, 'role', 'class');
+    setOutput(healersRanged, RANGE_HEALERSRANGED);
 }
 
-// TODO Make a function that takes in a boss and returns tank CDs depending on which tank
-// TODO Make a function that takes in a boss and returns raid CDs
+function bossAtramedes() {
+    const BOSS = 3;
+    const RANGE_GONGERS = 'CK5:CK7';
+    const RANGE_SONICBREATH = 'CJ10:CJ11';
+    const RANGE_OBNOXIOUSFIENDS = 'CJ14:CJ16';
+    const RANGE_SEARINGFLAME = 'CJ20:CJ23';
+    const RANGE_TRASH_LEFT = 'CR5:CR8';
+    const RANGE_TRASH_RIGHT = 'CR11:CR14';
+
+    const topHunter = orderBy(getByType(BOSS, 'class', 'Hunter'), false, 0, 0, 'parse')[0];
+    const topMage = orderBy(getByType(BOSS, 'class', 'Mage'), false, 0, 0, 'parse')[0];
+    const gongers = [topHunter, topHunter, topMage];
+    setOutput(gongers, RANGE_GONGERS);
+
+    const sonicBreath = getByType(BOSS, 'class', 'Druid');
+    setOutput(sonicBreath, RANGE_SONICBREATH);
+
+    let obnoxiousFiends = getAbility(BOSS, 'interrupt');
+    obnoxiousFiends = filterBy(obnoxiousFiends, false, 'role', 'Healer', 'Tank');
+    obnoxiousFiends = orderBy(obnoxiousFiends, false, 0, 0, 'role', 'class');
+    setOutput(obnoxiousFiends, RANGE_OBNOXIOUSFIENDS);
+
+    const searingFlame = getRaidCDs(BOSS);
+    setOutput(searingFlame, RANGE_SEARINGFLAME);
+
+    const tanks = getTanks(BOSS).slice(0, 2);
+    const trash = [...tanks, ...tanks];
+    setOutput(trash, RANGE_TRASH_LEFT);
+    setOutput(trash, RANGE_TRASH_RIGHT);
+}
+
+function bossMaloriak() {
+    const BOSS = 4;
+    const RANGE_TANKS = 'CY5:CY7';
+    const RANGE_ARCANESTORM = 'CX11:CX13';
+    const RANGE_RELEASEABERRATIONS = 'CX17:CX18';
+    const RANGE_REMEDY = 'CX22:CX23';
+    const RANGE_FROSTRAP = 'DF5:DF6';
+    const RANGE_ENFULGINGDARKNESS = 'DD9:DD10';
+    const RANGE_SCORCHINGBLAST = 'DE13:DE15';
+    const RANGE_GREENPHASE = 'DE18:DE20';
+    const RANGE_HEALERSRANGED = 'DL6:DL23';
+
+    const tanks = orderBy(getTanks(BOSS), false, 0, 0, 'spec', 'Blood', 'Protection','Guardian');
+    setOutput(tanks, RANGE_TANKS);
+
+    const interrupters = orderBy(getAbility(BOSS, 'interrupt'), false, 0, 0, 'parse');
+    const releaseAberrations = interrupters;
+}
