@@ -42,7 +42,6 @@ function getAbility(comp, ability, ...abilities) {
   return comp.filter(nick => abilityList.includes(getData(nick, 'specid')));
 }
 
-// TODO: Add support to options that have multiple values; i.e. 'parse','specid','63','64', etc.
 function orderBy(comp, ...options) {
   return comp.sort((a, b) => {
     for (let option of options) {

@@ -43,11 +43,16 @@ function forEachRaid() {
     assignmentsDarkIntent();
     assignmentsBloodlust();
     // Bosses
+    // BWD
     bossMagmaw();
     bossOmnotron();
     bossChimaeron();
     bossAtramedes();
     bossMaloriak();
+    bossNefarian();
+
+    // BOT
+    bossHalfus();
 
     // TODO Get and updated parses here instead of on sheet formulas
 }
@@ -292,10 +297,51 @@ function bossNefarian() {
     const electrocute = getRaidCDs(COMP);
     setOutput(electrocute, RANGE_ELECTROCUTE);
 
-    
     const interrupts = filterBy(orderBy(getAbility(COMP, 'interrupt'),'role'), false, 'role', 'Healer', 'Tank');
     interrupts.splice(0, 0, tanks[0]);
     interrupts.splice(2, 0, tanks[1]);
     setOutput(interrupts, RANGE_INTERRUPTS);
 
+    let remainingPlayers = COMP.filter(player => !healers.includes(player) && !interrupts.slice(0, 6).includes(player));
+    remainingPlayers = orderBy(remainingPlayers, 'parse');
+    let groups = [[], [], []];
+    for (let i = 0; i < remainingPlayers.length; i++) {
+      groups[i % 3].push(remainingPlayers[i]);
+    }
+    groups[0].unshift(...healers.slice(0, 2));
+    groups[1].unshift(...healers.slice(2, 4));
+    groups[2].unshift(...healers.slice(4, 7));
+    groups = groups.flat();
+    setOutput(groups, RANGE_PLATFORM);
+}
+
+function bossHalfus() {
+    const BOSS = 6;
+    const COMP = COMPS[BOSS];
+    const RANGE_TANKS = 'EO5:EO8';
+    const RANGE_WHELPRELEASERS = 'EM11';
+    const RANGE_SHADOWNOVA_SHAMAN = 'EM15';
+    const RANGE_SHADOWNOVA_IMMUNITY = 'EM19:EM23';
+    const RANGE_SHADOWNOVA_OTHERS = 'EP19:EP23';
+    const RANGE_SCORCHINGBREATH = 'EU5:EU10';
+
+    const mainTanks = orderBy(getTanks(COMP), ['spec', 'Blood', 'Protection','Guardian']);
+    const osTanks = COMP.filter(player => OSTANKS.includes(player));
+    const tanks = [...new Set([...mainTanks, ...osTanks])];
+    setOutput(tanks, RANGE_TANKS);
+
+    const whelpReleasers = getByType(COMP, 'class', 'Hunter');
+    setOutput(whelpReleasers, RANGE_WHELPRELEASERS);
+
+    const shadowNovaShaman = orderBy(getByType(COMP, 'class', 'Shaman'), ['spec','Elemental','Restoration','Enhancement']);
+    setOutput(shadowNovaShaman, RANGE_SHADOWNOVA_SHAMAN);
+
+    const paladins = getByType(COMP, 'class', 'Paladin');
+    setOutput(paladins, RANGE_SHADOWNOVA_IMMUNITY);
+
+    const shadowNovaOthers = filterBy(orderBy(getAbility(COMP, 'interrupt'),'class'), true, 'role', 'Ranged');
+    setOutput(shadowNovaOthers, RANGE_SHADOWNOVA_OTHERS);
+
+    const scorchingBreath = getRaidCDs(COMP);
+    setOutput(scorchingBreath, RANGE_SCORCHINGBREATH);
 }
