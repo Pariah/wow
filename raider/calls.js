@@ -42,6 +42,7 @@ function forEachRaid() {
     assignmentsRoles();
     assignmentsDarkIntent();
     assignmentsBloodlust();
+
     // Bosses
     // BWD
     bossMagmaw();
@@ -53,6 +54,14 @@ function forEachRaid() {
 
     // BOT
     bossHalfus();
+    bossValionaAndTheralion();
+    bossAscendantCouncil();
+    bossChoGall();
+    bossSinestra();
+
+    // TOTFW
+    bossConclaveOfWind();
+    bossAlAkir();
 
     // TODO Get and updated parses here instead of on sheet formulas
 }
@@ -344,4 +353,41 @@ function bossHalfus() {
 
     const scorchingBreath = getRaidCDs(COMP);
     setOutput(scorchingBreath, RANGE_SCORCHINGBREATH);
+}
+
+function bossAscendantCouncil() {
+    const BOSS = 8;
+    const COMP = COMPS[BOSS];
+    const RANGE_TANKS = ''; // 2 tanks
+    const RANGE_HYDROLANCE = ''; // melee interrupt
+    const RANGE_DISPEL = ''; // magic dispel
+    const RANGE_LIGHTNINGBLAST = ''; // ranged interrupt
+    const RANGE_GLACIATE = ''; // raid CDs
+    const RANGE_GRAVITYCRUSH = ''; // more raid CDs
+    const RANGE_ELECTRICINSTABILITY = ''; // raid CDs, can reuse already listed CDs
+    const RANGE_POSITIONING = ''; // healers and ranged
+
+    const tanks = orderBy(getTanks(COMP), ['spec', 'Blood', 'Protection','Guardian']);
+    setOutput(tanks, RANGE_TANKS);
+
+    const hydroLance = filter(getAbility(COMP, 'interrupt'), 'role', 'Melee');
+    setOutput(hydroLance, RANGE_HYDROLANCE);
+
+    const magicDispel = orderBy(getAbility(COMP, 'dispel', 'magic'), ['spec', 'Discipline', 'Holy', 'Shadow', 'Restoration']);
+    setOutput(magicDispel, RANGE_DISPEL);
+
+    const lightningBlast = filter(getAbility(COMP, 'interrupt'), 'role', 'Ranged');
+    setOutput(lightningBlast, RANGE_LIGHTNINGBLAST);
+
+    const glaciate = getRaidCDs(COMP);
+    setOutput(glaciate, RANGE_GLACIATE);
+
+    const gravityCrush = getRaidCDs(COMP).filter(cd => !glaciate.includes(cd));
+    setOutput(gravityCrush, RANGE_GRAVITYCRUSH);
+
+    const electricInstability = getRaidCDs(COMP);
+    setOutput(electricInstability, RANGE_ELECTRICINSTABILITY);
+
+    const healersRanged = orderBy(getByType(COMP, 'role', 'Healer', 'Ranged'), 'role', 'class');
+    setOutput(healersRanged, RANGE_POSITIONING);
 }
