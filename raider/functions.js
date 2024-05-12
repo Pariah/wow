@@ -175,3 +175,39 @@ function getTanks(comp) {
 
   return newArray;
 */
+
+// CLaude3 orderBy
+// const ROLES = ['Tank', 'Healer', 'DPS']; // Define ROLES array if not already defined
+
+// function orderBy(comp, ...options) {
+//   return comp.sort((a, b) => {
+//     for (const option of options) {
+//       let [aValue, bValue] = getValues(a, b, option);
+//       if (aValue !== bValue) return aValue < bValue ? -1 : 1;
+//     }
+//     return 0;
+//   });
+// }
+
+// function getValues(a, b, option) {
+//   if (Array.isArray(option)) {
+//     const [field, ...order] = option;
+//     const aValue = getData(a, field);
+//     const bValue = getData(b, field);
+//     const aIndex = order.indexOf(aValue);
+//     const bIndex = order.indexOf(bValue);
+//     return [aIndex === -1 ? Infinity : aIndex, bIndex === -1 ? Infinity : bIndex];
+//   }
+
+//   let [aValue, bValue] = [getData(a, option), getData(b, option)];
+
+//   if (option === 'parse') [aValue, bValue] = [bValue, aValue]; // Reverse order for 'parse'
+//   else if (option === 'role') [aValue, bValue] = [ROLES.indexOf(aValue), ROLES.indexOf(bValue)]; // Map roles to indices
+
+//   return [aValue, bValue];
+// }
+
+// function getData(obj, field) {
+//   // Implement getData function to retrieve data from the object
+//   // based on the provided field
+// }

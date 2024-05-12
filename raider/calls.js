@@ -355,34 +355,72 @@ function bossHalfus() {
     setOutput(scorchingBreath, RANGE_SCORCHINGBREATH);
 }
 
+function bossValionaAndTheralion() {
+    const BOSS = 7;
+    const COMP = COMPS[BOSS];
+    const RANGE_TWILIGHT_1 = 'FA7:FA10';
+    const RANGE_TWILIGHT_2 = 'FA12:FA15';
+    const RANGE_BLACKOUT = 'FB18:FB23';
+    const RANGE_POSITIONING = 'FJ6:FJ23';
+
+    const tanks = getTanks(COMP);
+
+    const twilightAll = COMP.filter(player => player !== tanks[0] && player !== tanks[1]);
+
+    // Filter healers and order by preferred spec
+    const healers = orderBy(getByType(twilightAll, 'role', 'Healer'), ['spec', 'Discipline', 'Restoration', 'Holy']);
+
+    // If there are rogues, add them to both groups
+    const rogues = getByType(twilightAll, 'class', 'Rogue');
+
+    // Filter DPS and order by preferred spec
+    const dps = orderBy(getByType(twilightAll, 'role', 'Melee', 'Ranged'),
+    ['spec', 'Fire', 'Arcane', 'Frost', 'Unholy', 'Marksmanship', 'Beast Mastery', 'Survival', 'Feral', 'Enhancement',
+    'Arms', 'Fury', 'Balance', 'Shadow', 'Affliction', 'Demonology', 'Destruction']).filter(dps => !rogues.includes(dps));
+
+    // Create groups
+    let group1 = [...healers.slice(0, 1), ...rogues, ...dps.slice(0, 4 - rogues.length)];
+    let group2 = [...healers.slice(1, 2), ...rogues, ...dps.slice(4 - rogues.length, 8 - rogues.length)];
+
+    // Output groups
+    setOutput(group1, RANGE_TWILIGHT_1);
+    setOutput(group2, RANGE_TWILIGHT_2);
+
+    const blackout = getRaidCDs(COMP);
+    setOutput(blackout, RANGE_BLACKOUT);
+
+    const positioning = orderBy(getByType(COMP, 'role', 'Healer', 'Ranged'), 'role', 'class');
+    setOutput(positioning, RANGE_POSITIONING);
+}
+
 function bossAscendantCouncil() {
     const BOSS = 8;
     const COMP = COMPS[BOSS];
-    const RANGE_TANKS = ''; // 2 tanks
-    const RANGE_HYDROLANCE = ''; // melee interrupt
-    const RANGE_DISPEL = ''; // magic dispel
-    const RANGE_LIGHTNINGBLAST = ''; // ranged interrupt
-    const RANGE_GLACIATE = ''; // raid CDs
-    const RANGE_GRAVITYCRUSH = ''; // more raid CDs
-    const RANGE_ELECTRICINSTABILITY = ''; // raid CDs, can reuse already listed CDs
-    const RANGE_POSITIONING = ''; // healers and ranged
+    const RANGE_TANKS = 'FN6:FN7'; // 2 tanks
+    const RANGE_HYDROLANCE = 'FP10:FP11'; // melee interrupt
+    const RANGE_DISPEL = 'FO18'; // magic dispel
+    const RANGE_LIGHTNINGBLAST = 'FP21:FP23'; // ranged interrupt
+    const RANGE_GLACIATE = 'FW5:FW7'; // raid CDs
+    const RANGE_GRAVITYCRUSH = 'FW10:FW12'; // more raid CDs
+    const RANGE_ELECTRICINSTABILITY = 'FW15:FW23'; // raid CDs, can reuse already listed CDs
+    const RANGE_POSITIONING = 'GD6:GD23'; // healers and ranged
 
     const tanks = orderBy(getTanks(COMP), ['spec', 'Blood', 'Protection','Guardian']);
     setOutput(tanks, RANGE_TANKS);
 
-    const hydroLance = filter(getAbility(COMP, 'interrupt'), 'role', 'Melee');
+    const hydroLance = filterBy(getAbility(COMP, 'interrupt'), 'role', 'Melee');
     setOutput(hydroLance, RANGE_HYDROLANCE);
 
     const magicDispel = orderBy(getAbility(COMP, 'dispel', 'magic'), ['spec', 'Discipline', 'Holy', 'Shadow', 'Restoration']);
     setOutput(magicDispel, RANGE_DISPEL);
 
-    const lightningBlast = filter(getAbility(COMP, 'interrupt'), 'role', 'Ranged');
+    const lightningBlast = filterBy(getAbility(COMP, 'interrupt'), 'role', 'Ranged');
     setOutput(lightningBlast, RANGE_LIGHTNINGBLAST);
 
     const glaciate = getRaidCDs(COMP);
     setOutput(glaciate, RANGE_GLACIATE);
 
-    const gravityCrush = getRaidCDs(COMP).filter(cd => !glaciate.includes(cd));
+    const gravityCrush = getRaidCDs(COMP).filter(cd => !glaciate.slice(0, 3).includes(cd));
     setOutput(gravityCrush, RANGE_GRAVITYCRUSH);
 
     const electricInstability = getRaidCDs(COMP);
@@ -390,4 +428,100 @@ function bossAscendantCouncil() {
 
     const healersRanged = orderBy(getByType(COMP, 'role', 'Healer', 'Ranged'), 'role', 'class');
     setOutput(healersRanged, RANGE_POSITIONING);
+}
+
+function bossChoGall() {
+    const BOSS = 9;
+    const COMP = COMPS[BOSS];
+    const RANGE_TANKS = 'GL5:GL6'; // 2 tanks
+    const RANGE_FLAMESORDERS = 'GL12:GL16'; // 5 Tank CDs for tanks[0]
+    const RANGE_SHADOWSORDERS = 'GL19:GL23'; // 5 Raid CDs
+    const RANGE_ADHERENT = 'GR6:GR7'; // 2 hunters
+    const RANGE_DEPRAVITY = 'GS10:GS15'; // 2 groups of 3. [meleeInterrupt1, meleeInterrupt2, rangedInterrupt1],[meleeInterrupt3, meleeInterrupt4, rangedInterrupt2]
+    const RANGE_LIFEGRIP = 'GQ19'; // 1 priest, order by spec: Discipline, Holy, Shadow
+    const RANGE_BEAM = 'GY5:GY8'; // 4 interrupters, order by role: Melee, Ranged, Tank, Healer
+    const RANGE_CORRUPTION = 'GY11:GY15'; // 5 raid CDs. Use Shadow's Orders CDs
+
+    const tanks = orderBy(getTanks(COMP), ['spec', 'Blood', 'Protection','Guardian']);
+    setOutput(tanks, RANGE_TANKS);
+
+    const flamesOrders = getTankCDs(COMP, tanks[0], true).slice(0, 5);
+    setOutput(flamesOrders, RANGE_FLAMESORDERS);
+
+    const shadowsOrders = getRaidCDs(COMP);
+    setOutput(shadowsOrders, RANGE_SHADOWSORDERS);
+
+    const adherent = getByType(COMP, 'class', 'Hunter');
+    setOutput(adherent, RANGE_ADHERENT);
+
+    const interruptors = getAbility(COMP, 'interrupt');
+    const meleeInterruptors = getByType(COMP, 'role', 'Melee').filter(player => interruptors.includes(player));
+    const rangedInterruptors = getByType(COMP, 'role', 'Ranged').filter(player => interruptors.includes(player));
+
+    const depravity = [
+        meleeInterruptors[0], meleeInterruptors[1], rangedInterruptors[0], 
+        meleeInterruptors[2], meleeInterruptors[3], rangedInterruptors[1]
+    ];
+    setOutput(depravity, RANGE_DEPRAVITY);
+
+    const lifeGrip = orderBy(getByType(COMP, 'class', 'Priest'), ['spec', 'Discipline', 'Holy', 'Shadow']);
+    setOutput(lifeGrip, RANGE_LIFEGRIP);
+
+    const beam = orderBy(interruptors, 'role');
+    setOutput(beam, RANGE_BEAM);
+
+    const corruption = shadowsOrders;
+    setOutput(corruption, RANGE_CORRUPTION);
+}
+
+function bossSinestra() {
+    const BOSS = 10;
+    const COMP = COMPS[BOSS];
+    const RANGE_TANKS = 'HD6:HD7'; // 2 tanks
+    const RANGE_WRACKDISPELS = 'HE10:HE11'; // 2x magic dispel, orderBy spec: Discipline, Holy, Shadow, Restoration
+    const RANGE_WRACKCDS = 'HF14:HF15'; // 2x getCooldown target, not found in whelptankcds
+    const RANGE_FLAMEBREATH = 'HG18:HG23'; // 6x RaidCDs
+    const RANGE_EGGS_LEFT = 'HK6:HK12'; // All ranged and healers except for hunters and 2 healers, order by parse, split into 2 groups, at least 1 healer in each group
+    const RANGE_EGGS_RIGHT = 'HN6:HN12'; // All ranged and healers except for hunters and 2 healers, order by parse, split into 2 groups, at least 1 healer in each group
+    const RANGE_SPITECALLER = 'HM16:HM17'; // 2x getAbility threat from rogues or hunters, prefer rogues
+    const RANGE_UNLEASHESSENCE = 'HM20:HM23'; // 4x  rogues, deathknights, or hunters preferred in that order
+    const RANGE_WHELPKILLERS = 'HT6:HT11'; // 6x ranged dps, sort by parse
+    const RANGE_WHELPTANKCDS = 'HT15:HT16'; // 2x get tank cds for tanks[1]
+
+    const tanks = orderBy(getTanks(COMP), ['spec', 'Blood', 'Protection','Guardian']);
+    setOutput(tanks, RANGE_TANKS);
+
+    const wrackDispels = orderBy(getAbility(COMP, 'dispel', 'magic'), ['spec', 'Discipline', 'Holy', 'Shadow', 'Restoration']);
+    setOutput(wrackDispels, RANGE_WRACKDISPELS);
+
+    const cooldowns = getCooldown(COMP, 'target', ['dmgreduc']).filter(cd => !tanks.includes(cd));
+    const tankCDs = cooldowns.slice(0, 2);
+    const wrackCDs = cooldowns.slice(2);
+    setOutput(wrackCDs, RANGE_WRACKCDS);
+
+    const flameBreath = getRaidCDs(COMP);
+    setOutput(flameBreath, RANGE_FLAMEBREATH);
+
+    const rangedNoHunters = getByType(COMP, 'role', 'Ranged').filter(player => !getByType(COMP, 'class', 'Hunter').includes(player));
+    const healers = getByType(COMP, 'role', 'Healer');
+    let groups = [[], []];
+    for (let i = 0; i < rangedNoHunters.length; i++) {
+        groups[i % 2].push(rangedNoHunters[i]);
+    }
+    groups[0].unshift(...healers.slice(0, 2));
+    groups[1].unshift(...healers.slice(2, 4));
+    setOutput(groups[0], RANGE_EGGS_LEFT);
+    setOutput(groups[1], RANGE_EGGS_RIGHT);
+
+    const spiteCaller = orderBy(getCooldown(COMP, 'target', ['threatinc']),['class', 'Rogue', 'Hunter']);
+    setOutput(spiteCaller, RANGE_SPITECALLER);
+
+    const unleash = orderBy(getByType(COMP, 'class', 'Rogue', 'Death Knight', 'Hunter'), ['class', 'Rogue', 'Death Knight', 'Hunter']).filter(player => player !== tanks[0]);
+    setOutput(unleash, RANGE_UNLEASHESSENCE);
+
+    const whelpKillers = orderBy(getByType(COMP, 'role', 'Ranged'), 'parse').slice(0, 6);
+    setOutput(whelpKillers, RANGE_WHELPKILLERS);
+
+    
+    setOutput(tankCDs, RANGE_WHELPTANKCDS);
 }
