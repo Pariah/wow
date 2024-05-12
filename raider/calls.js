@@ -1,42 +1,3 @@
-const CLEAR_RANGES = [
-    // BossMagmaw
-    'AZ5',
-    'BA8:BA10',
-    'BA13:BA18',
-    'BA21:BA26',
-    // BossOmnotron
-    'BG5',
-    'BH6:BH11',
-    'BG14:BG15',
-    'BH18:BH20',
-    'BH23:BH24',
-    'BH27:BH32',
-    // BossChimaeron
-    'BP5:BP7',
-    'BO11:BO13',
-    'BO17:BO19',
-    'BV5:BV10',
-    'BV14:BV23',
-    'CC6:CC23',
-    // BossAtramedes
-    'CK5:CK7',
-    'CJ10:CJ11',
-    'CJ14:CJ16',
-    'CJ20:CJ23',
-    'CR5:CR8',
-    'CR11:CR14',
-    // BossMaloriak
-    'CY5:CY7',
-    'CX11:CX13',
-    'CX17:CX18',
-    'CX22:CX23',
-    'DF5:DF6',
-    'DD9:DD10',
-    'DE13:DE15',
-    'DE18:DE20',
-    'DL6:DL23'
-];
-
 function forEachRaid() {
     // Assignments
     assignmentsRoles();
@@ -94,7 +55,7 @@ function setBossNames() {
     const assignRolesRange = 'AA4:AM4';
     const assignDarkIntentCells = ['W19', 'Y19', 'AA19', 'AC19', 'AE19', 'AG19', 'AI19', 'AK19', 'AM19','AO19', 'AQ19', 'AS19', 'AU19'];
     const assignBloodlustRange = 'AO5:AO17';
-    const bossCells = [];
+    // const bossCells = [];
     const bossNamesShort = BOSSES.map(boss => boss.substring(0, 3).replace(/[^a-zA-Z]/g, ''));
 
     compCells.forEach((cell, index) => SHEET_TIER.getRange(cell).setValue(BOSSES[index]));
@@ -264,8 +225,8 @@ function bossMaloriak() {
     const engulfingDarkness = getRaidCDs(COMP);
     setOutput(engulfingDarkness, RANGE_ENFULFINGDARKNESS);
 
-    const scorcingBlast = getRaidCDs(COMP, undefined, engulfingDarkness.slice(0, 2));
-    setOutput(scorcingBlast, RANGE_SCORCHINGBLAST);
+    const scorchingBlast = getRaidCDs(COMP, undefined, engulfingDarkness.slice(0, 2));
+    setOutput(scorchingBlast, RANGE_SCORCHINGBLAST);
 
     const greenPhase = getTankCDs(COMP, getTanks(COMP)[0], true);
     setOutput(greenPhase, RANGE_GREENPHASE);
@@ -484,7 +445,7 @@ function bossSinestra() {
     const RANGE_EGGS_LEFT = 'HK6:HK12'; // All ranged and healers except for hunters and 2 healers, order by parse, split into 2 groups, at least 1 healer in each group
     const RANGE_EGGS_RIGHT = 'HN6:HN12'; // All ranged and healers except for hunters and 2 healers, order by parse, split into 2 groups, at least 1 healer in each group
     const RANGE_SPITECALLER = 'HM16:HM17'; // 2x getAbility threat from rogues or hunters, prefer rogues
-    const RANGE_UNLEASHESSENCE = 'HM20:HM23'; // 4x  rogues, deathknights, or hunters preferred in that order
+    const RANGE_UNLEASHESSENCE = 'HM20:HM23'; // 4x  rogues, death knights, or hunters preferred in that order
     const RANGE_WHELPKILLERS = 'HT6:HT11'; // 6x ranged dps, sort by parse
     const RANGE_WHELPTANKCDS = 'HT15:HT16'; // 2x get tank cds for tanks[1]
 
