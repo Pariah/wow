@@ -14,6 +14,15 @@
         "SLEETSTORM",
         "SWAPGROUP",
         "testvar",
-        "TOTFW"
+        "TOTFW",
+        "TSERIALIZATION",
+        "Xcut",
+        "Xpar",
+        "Xpariah",
+        "Xpaws",
+        "Xrune",
+        "Xshot",
+        "Xtempo",
+        "Xvelocity"
     ]
 }

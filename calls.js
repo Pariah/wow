@@ -327,6 +327,7 @@ function bossValionaAndTheralion() {
     const RANGE_TWILIGHT_2 = 'FA12:FA15';
     const RANGE_BLACKOUT = 'FB18:FB23';
     const RANGE_POSITIONING = 'FJ6:FJ23';
+    const RANGE_TSERIALIZATION = 'FH6:FH23';
 
     const tanks = getTanks(COMP);
 
@@ -354,9 +355,15 @@ function bossValionaAndTheralion() {
     const blackout = getRaidCDs(COMP);
     setOutput(blackout, RANGE_BLACKOUT);
 
-    const positioning = orderBy(getByType(COMP, 'role', 'Healer', 'Ranged'), 'role', 'class');
-    setOutput(positioning, RANGE_POSITIONING);
-}
+    // TODO: Sort rangedAndHealers by parse but always put hunters at the bottom of the list
+    const rangedAndHealers = orderBy(getByType(COMP, 'role', 'Healer', 'Ranged'),'role','class');
+    setOutput(rangedAndHealers, RANGE_POSITIONING);
+
+    const melee = filterBy(getByType(COMP, 'role', 'Melee'), true, 'class', 'Rogue');
+    const standStillTotal = 10 - melee.length;
+    const tSerialization = [...Array(standStillTotal).fill('-'), ...Array.from({length: rangedAndHealers.length}, (_, i) => i + standStillTotal + 1)];
+    setOutput(tSerialization, RANGE_TSERIALIZATION);
+}    
 
 function bossAscendantCouncil() {
     const BOSS = 8;
