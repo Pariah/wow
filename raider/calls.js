@@ -316,6 +316,10 @@ function bossHalfus() {
     setOutput(scorchingBreath, RANGE_SCORCHINGBREATH);
 }
 
+/*
+    TODO: Add positioning for Valiona and Theralion
+    We can have 10 people in melee. So meleeCount + notMeleeCount = 10
+*/
 function bossValionaAndTheralion() {
     const BOSS = 7;
     const COMP = COMPS[BOSS];
@@ -369,13 +373,13 @@ function bossAscendantCouncil() {
     const tanks = orderBy(getTanks(COMP), ['spec', 'Blood', 'Protection','Guardian']);
     setOutput(tanks, RANGE_TANKS);
 
-    const hydroLance = filterBy(getAbility(COMP, 'interrupt'), 'role', 'Melee');
+    const hydroLance = filterBy(getAbility(COMP, 'interrupt'), true, 'role', 'Melee');
     setOutput(hydroLance, RANGE_HYDROLANCE);
 
     const magicDispel = orderBy(getAbility(COMP, 'dispel', 'magic'), ['spec', 'Discipline', 'Holy', 'Shadow', 'Restoration']);
     setOutput(magicDispel, RANGE_DISPEL);
 
-    const lightningBlast = filterBy(getAbility(COMP, 'interrupt'), 'role', 'Ranged');
+    const lightningBlast = filterBy(getAbility(COMP, 'interrupt'), true, 'role', 'Ranged');
     setOutput(lightningBlast, RANGE_LIGHTNINGBLAST);
 
     const glaciate = getRaidCDs(COMP);
@@ -485,4 +489,75 @@ function bossSinestra() {
 
     
     setOutput(tankCDs, RANGE_WHELPTANKCDS);
+}
+
+function bossConclaveOfWind() {
+    const BOSS = 11;
+    const COMP = COMPS[BOSS];
+    const RANGE_SWAPGROUP = 'HZ7:HZ10'; // [tanks[1], healer[1], tanks[2], healers[2]]
+    const RANGE_SLEETSTORM = 'IA13:IA17'; // Get raid CDs not found in swap group or permanent West group
+    const RANGE_ASSIGNMENTS = 'IE14:IE34'; // [tanks[0], healers[0], otherHealers, OSHEALERS, everyone else]
+
+    const tanks = orderBy(getTanks(COMP), ['spec', 'Blood', 'Protection','Guardian']);
+    const healers = orderBy(getByType(COMP, 'role', 'Healer'), ['specid', 65, 264, 256, 257, 105]);
+
+    const swapGroup = [tanks[1], healers[1], tanks[2], healers[2]];
+    setOutput(swapGroup, RANGE_SWAPGROUP);
+
+    const sleetStorm = getRaidCDs(COMP).filter(cd => !swapGroup.includes(cd));
+    setOutput(sleetStorm, RANGE_SLEETSTORM);
+
+    const osHealers = COMP.filter(player => OSHEALERS.includes(player))[0];
+    const everyoneElse = orderBy(COMP.filter(player => ![...tanks, ...swapGroup, ...healers, osHealers].includes(player)), 'role', 'class');
+    const assignments = [tanks[0], healers[0], ...healers.slice(3), osHealers, ...everyoneElse];
+    setOutput(assignments, RANGE_ASSIGNMENTS);
+}
+
+/**
+ * TODO: Allow for a varying amount of healers
+ * !: Currently only works for 8 healers
+ */
+function bossAlAkir() {
+    const BOSS = 12;
+    const COMP = COMPS[BOSS];
+    const RANGE_TANKS = 'IP5:IP6'; // 2 tanks
+    const RANGE_PHASE1 = 'IN10:IN34';
+    const RANGE_STORMLING = 'IU6:IU9';
+    const RANGE_STORMLING_CDS = 'IV13:IV14';
+    const RANGE_ACIDRAIN = 'IV18:IV21';
+    const RANGE_STACK = 'IU24';
+
+    const tanks = orderBy(getTanks(COMP), ['spec', 'Blood', 'Protection','Guardian']);
+    setOutput(tanks, RANGE_TANKS);
+
+    const osHealers = COMP.filter(player => OSHEALERS.includes(player));
+    const healers = [...orderBy(getByType(COMP, 'role', 'Healer'),'parse'), ...osHealers];
+    const dps = orderBy(COMP.filter(player => !tanks.slice(0, 2).includes(player) && !healers.includes(player)), 'role', 'class');
+  
+    let newArray = [...tanks.slice(0, 2)];
+    while (healers.length > 0 || dps.length > 0) {
+      if (healers.length > 0) {
+        newArray.push(healers.shift());
+      }
+      if (dps.length > 0) {
+        newArray.push(...dps.splice(0, 2));
+      }
+    }
+  
+    setOutput(newArray, RANGE_PHASE1);
+
+    const hunters = getByType(COMP, 'class', 'Hunter');
+    const ranged = orderBy(getByType(COMP, 'role', 'Ranged'), 'parse');
+    const stormling = [...new Set([hunters[0], ...ranged])];
+    setOutput(stormling, RANGE_STORMLING);
+
+    const stormlingCDs = getCooldown(COMP, 'target', ['dmgreduc', 'heal']);
+    setOutput(stormlingCDs, RANGE_STORMLING_CDS);
+
+    const acidRain = getRaidCDs(COMP);
+    setOutput(acidRain, RANGE_ACIDRAIN);
+
+    const stack = ['Xpar', 'Xrune', 'Xpaws', 'Xcut', 'Xtempo', 'Xvelocity','Xsl', 'Xshot', 'Xpariah'].filter(player => COMP.includes(player));
+    setOutput(stack, RANGE_STACK);
+
 }
